@@ -25,11 +25,15 @@ func main() {
 }
 
 func Run(args []string, w *bufio.Writer) {
+	if len(args) == 0 {
+		w.WriteString("\n")
+		return
+	}
 	options := newOptions()
-	flags := validateArgs(args, w)
-	switchOptions(flags, options)
+	flags := validateFlags(args)
 	if len(flags) != 0 {
-		args = append(args[:0], args[1:]...)
+		switchOptions(flags[0], options)
+		args = args[1:]
 	}
 	for i, val := range args {
 		if i > 0 {
@@ -42,37 +46,27 @@ func Run(args []string, w *bufio.Writer) {
 	}
 }
 
-func validateArgs(args []string, w *bufio.Writer) []string {
+func validateFlags(args []string) []string {
 	options := make([]string, 0, 3)
-	if len(args) == 0 {
-		w.WriteString("\n")
-		return options
-	}
-	arg := args[0]
-	starts := strings.HasPrefix(arg, "-")
-	if starts {
-		for _, v := range arg {
-			if v == '-' {
+
+	if strings.HasPrefix(args[0], "-") {
+		for _, char := range args[0][1:] {
+			switch char {
+			case 'n':
+				options = append(options, string(char))
 				continue
-			}
-			switch v {
-			case 'n', 'e', 'E':
-				options = append(options, string(v))
+			default:
+				options = make([]string, 0, 3)
+				return options
 			}
 		}
 	}
 	return options
 }
 
-func switchOptions(flags []string, o *options) {
-	for _, val := range flags {
-		switch val {
-		case "n":
-			o.dislayReturn = false
-		case "e":
-			o.escapeEnable = true
-		case "E":
-			o.escapeEnable = false
-		}
+func switchOptions(val string, o *options) {
+	switch val {
+	case "n":
+		o.dislayReturn = false
 	}
 }
